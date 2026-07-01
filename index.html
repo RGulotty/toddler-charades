@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Charades">
+<meta name="theme-color" content="#ff6b9d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Toddler Charades</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "SF Pro Rounded", ui-rounded, "Nunito", "Baloo 2",
+                 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #ff6b9d;
+    transition: background-color .5s ease;
+    color: #fff;
+    display: flex; flex-direction: column;
+    height: 100dvh;
+    touch-action: manipulation;
+  }
+
+  /* Top bar: category chips */
+  header {
+    display: flex; gap: 8px; justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 10px) 12px 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font: 600 clamp(15px, 4.5vw, 20px)/1 inherit;
+    padding: 10px 18px; border-radius: 999px;
+    background: rgba(255,255,255,.22);
+    color: #fff; border: 2px solid transparent;
+    cursor: pointer; transition: transform .1s, background .2s;
+  }
+  .chip.active { background: #fff; color: #333; }
+  .chip:active { transform: scale(.94); }
+
+  /* Main tappable card area */
+  main {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; position: relative; padding: 10px;
+  }
+  .card { text-align: center; will-change: transform; }
+  .emoji {
+    font-size: min(46vh, 68vw); line-height: 1;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,.18));
+  }
+  .word {
+    margin-top: 2vh;
+    font-weight: 800;
+    font-size: clamp(34px, 11vw, 84px);
+    letter-spacing: .5px;
+    text-shadow: 0 3px 0 rgba(0,0,0,.12);
+  }
+  .kind {
+    margin-top: 1vh; font-size: clamp(15px, 4.5vw, 22px);
+    font-weight: 600; opacity: .82; text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* Start / hint prompt */
+  .hint {
+    font-size: clamp(20px, 6vw, 32px); font-weight: 700;
+    opacity: .95; text-align: center; padding: 0 24px;
+  }
+  .hint .big { font-size: min(34vh, 52vw); display: block; margin-bottom: 2vh; }
+
+  footer {
+    text-align: center; padding: 8px 12px calc(env(safe-area-inset-bottom) + 14px);
+    font-size: clamp(14px, 4vw, 18px); font-weight: 600; opacity: .8;
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(.4) rotate(-6deg); opacity: 0; }
+    60%  { transform: scale(1.08) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .animate { animation: pop .45s cubic-bezier(.2,1.3,.4,1); }
+</style>
+</head>
+<body>
+  <header>
+    <button class="chip active" data-cat="both">🎲 Both</button>
+    <button class="chip" data-cat="animal">🦁 Animals</button>
+    <button class="chip" data-cat="action">💃 Actions</button>
+  </header>
+
+  <main id="stage">
+    <div class="hint" id="hint">
+      <span class="big">🎭</span>
+      Tap to start!
+    </div>
+  </main>
+
+  <footer id="foot">Tap anywhere for the next one</footer>
+
+<script>
+// ---- The deck -------------------------------------------------------------
+const ANIMALS = [
+  ["🦁","Lion"],["🐵","Monkey"],["🐘","Elephant"],["🐧","Penguin"],
+  ["🦘","Kangaroo"],["🦒","Giraffe"],["🦆","Duck"],["🐸","Frog"],
+  ["🐰","Rabbit"],["🐻","Bear"],["🐮","Cow"],["🐷","Pig"],
+  ["🐴","Horse"],["🐟","Fish"],["🐍","Snake"],["🐝","Bee"],
+  ["🦋","Butterfly"],["🦀","Crab"],["🦉","Owl"],["🦊","Fox"],
+  ["🐢","Turtle"],["🐶","Dog"],["🐱","Cat"],["🐳","Whale"],
+  ["🐬","Dolphin"],["🦈","Shark"],["🐔","Chicken"],["🐌","Snail"],
+  ["🐊","Crocodile"],["🐯","Tiger"],["🦓","Zebra"],["🐼","Panda"],
+  ["🐙","Octopus"],["🦇","Bat"],["🦍","Gorilla"],["🐑","Sheep"],
+  ["🐓","Rooster"],["🦕","Dinosaur"],["🦚","Peacock"],["🦩","Flamingo"],
+  ["🐫","Camel"],["🦔","Hedgehog"],["🐿️","Squirrel"],["🐭","Mouse"],
+  ["🦅","Eagle"],["🐛","Caterpillar"],["🐨","Koala"],["🦢","Swan"],
+];
+const ACTIONS = [
+  ["🩰","Ballerina"],["💃","Dancing"],["🤸","Jumping"],["😴","Sleeping"],
+  ["🏃","Running"],["🏊","Swimming"],["👏","Clapping"],["😋","Eating"],
+  ["🪥","Brushing Teeth"],["👋","Waving"],["✈️","Airplane"],["🚗","Driving"],
+  ["🎤","Singing"],["😘","Blowing a Kiss"],["🦶","Stomping"],["🤖","Robot"],
+  ["🥁","Drumming"],["🚲","Riding a Bike"],["⚽","Kicking a Ball"],["🧼","Washing Hands"],
+  ["😭","Crying"],["😂","Laughing"],["🎨","Painting"],["🚣","Rowing a Boat"],
+  ["👹","Monster"],["🍳","Cooking"],["📖","Reading"],["🚀","Astronaut"],
+  ["🧑‍🚒","Firefighter"],["🧙","Wizard"],["🌳","A Tree"],["🌸","A Flower"],
+  ["🦸","Superhero"],["🤠","Cowboy"],["👻","Ghost"],["🥷","Ninja"],
+  ["🎣","Fishing"],["🧹","Sweeping"],["🪁","Flying a Kite"],["⛹️","Bouncing a Ball"],
+];
+
+// tag each card with its kind
+const DECK = {
+  animal: ANIMALS.map(c => ({emoji:c[0], word:c[1], kind:"animal"})),
+  action: ACTIONS.map(c => ({emoji:c[0], word:c[1], kind:"action"})),
+};
+DECK.both = DECK.animal.concat(DECK.action);
+
+const COLORS = ["#ff6b9d","#ff8c42","#ffd166","#06d6a0","#4cc9f0",
+                "#7b6cff","#f95f62","#2ec4b6","#e56399","#5aa9e6",
+                "#f4a259","#8ac926","#ff70a6","#00b4d8"];
+
+// ---- State ----------------------------------------------------------------
+let category = "both";
+let bag = [];          // shuffled queue, so cards don't repeat until the deck runs out
+let last = null;
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function refill(){
+  bag = shuffle(DECK[category]);
+  // avoid showing the same card twice across a reshuffle
+  if (last && bag.length > 1 && bag[bag.length-1].word === last.word){
+    [bag[0], bag[bag.length-1]] = [bag[bag.length-1], bag[0]];
+  }
+}
+
+const stage = document.getElementById("stage");
+const foot  = document.getElementById("foot");
+
+function nextCard(){
+  if (bag.length === 0) refill();
+  const c = bag.pop();
+  last = c;
+
+  document.body.style.backgroundColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+
+  stage.innerHTML =
+    '<div class="card animate">' +
+      '<div class="emoji">' + c.emoji + '</div>' +
+      '<div class="word">' + c.word + '</div>' +
+      '<div class="kind">' + (c.kind === "animal" ? "Animal" : "Act it out!") + '</div>' +
+    '</div>';
+  foot.textContent = "Tap for the next one →";
+}
+
+// tap the big area to advance
+stage.addEventListener("click", nextCard);
+
+// category chips
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", e => {
+    e.stopPropagation();
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    category = chip.dataset.cat;
+    bag = []; last = null;
+    nextCard();
+  });
+});
+
+// keyboard: space / arrow to advance (handy when testing on a laptop)
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "ArrowRight" || e.code === "Enter") nextCard();
+});
+
+// register offline cache
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
