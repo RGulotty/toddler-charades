@@ -73,6 +73,10 @@
     opacity: .95; text-align: center; padding: 0 24px;
   }
   .hint .big { font-size: min(34vh, 52vw); display: block; margin-bottom: 2vh; }
+  .hero {
+    width: min(38vh, 62vw); height: auto; display: block; margin: 0 auto 2vh;
+    filter: drop-shadow(0 8px 14px rgba(0,0,0,.2));
+  }
 
   footer {
     text-align: center; padding: 8px 12px calc(env(safe-area-inset-bottom) + 14px);
@@ -96,7 +100,50 @@
 
   <main id="stage">
     <div class="hint" id="hint">
-      <span class="big">🎭</span>
+      <svg class="hero" viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg" aria-label="Super Tony">
+        <!-- Cape -->
+        <path d="M96,96 C58,138 54,205 70,246 L92,228 L110,246 L120,230 L130,246 L148,228 L170,246 C186,205 182,138 144,96 Z" fill="#e63946"/>
+        <path d="M96,96 C72,128 68,150 80,150 L160,150 C172,150 168,128 144,96 Z" fill="#c92f3c"/>
+        <!-- Legs -->
+        <path d="M110,168 L104,224" stroke="#3a6ea5" stroke-width="17" stroke-linecap="round"/>
+        <path d="M130,168 L136,224" stroke="#3a6ea5" stroke-width="17" stroke-linecap="round"/>
+        <!-- Boots -->
+        <ellipse cx="100" cy="232" rx="15" ry="10" fill="#d62828"/>
+        <ellipse cx="140" cy="232" rx="15" ry="10" fill="#d62828"/>
+        <!-- Torso -->
+        <path d="M99,104 Q94,140 101,168 L139,168 Q146,140 141,104 Z" fill="#2a9d5c"/>
+        <!-- Chest star -->
+        <path d="M120,120 l4.6,9.3 10.3,1.5 -7.4,7.3 1.7,10.2 -9.2,-4.8 -9.2,4.8 1.7,-10.2 -7.4,-7.3 10.3,-1.5 Z" fill="#ffd166"/>
+        <!-- Arms: hands on hips -->
+        <path d="M103,110 L82,140 L106,160" fill="none" stroke="#2a9d5c" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M137,110 L158,140 L134,160" fill="none" stroke="#2a9d5c" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Hands -->
+        <circle cx="106" cy="161" r="7.5" fill="#ffd9b3"/>
+        <circle cx="134" cy="161" r="7.5" fill="#ffd9b3"/>
+        <!-- Neck -->
+        <rect x="112" y="96" width="16" height="16" rx="6" fill="#ffd9b3"/>
+        <!-- Cape collar -->
+        <path d="M104,100 L120,112 L136,100 L132,94 L120,100 L108,94 Z" fill="#e63946"/>
+        <!-- Ears -->
+        <circle cx="88" cy="80" r="7" fill="#ffd9b3"/>
+        <circle cx="152" cy="80" r="7" fill="#ffd9b3"/>
+        <!-- Head -->
+        <circle cx="120" cy="76" r="34" fill="#ffd9b3"/>
+        <!-- Hair -->
+        <path d="M87,74 C84,44 100,30 120,30 C140,30 156,44 153,74 C150,60 140,58 132,62 C127,49 116,49 111,61 C103,56 95,58 91,66 C89,68 88,71 87,74 Z" fill="#efbf4a"/>
+        <!-- Cheeks -->
+        <circle cx="101" cy="86" r="6.5" fill="#ff9aa2" opacity="0.65"/>
+        <circle cx="139" cy="86" r="6.5" fill="#ff9aa2" opacity="0.65"/>
+        <!-- Eyes -->
+        <circle cx="108" cy="74" r="4.2" fill="#3a2b23"/>
+        <circle cx="132" cy="74" r="4.2" fill="#3a2b23"/>
+        <circle cx="109.3" cy="72.7" r="1.4" fill="#fff"/>
+        <circle cx="133.3" cy="72.7" r="1.4" fill="#fff"/>
+        <!-- Smile -->
+        <path d="M106,88 Q120,108 134,88 Z" fill="#b23a2e"/>
+        <path d="M106,88 Q120,94 134,88 Z" fill="#fff"/>
+        <path d="M114,99 Q120,106 126,99 Q120,102 114,99 Z" fill="#e56b7a"/>
+      </svg>
       Tap to start!
     </div>
   </main>
