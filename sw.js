@@ -1,5 +1,6 @@
 // Tiny offline cache so the game works with no signal (e.g. in the car).
-const CACHE = "charades-v1";
+// Network-first so edits show up when online; falls back to cache when offline.
+const CACHE = "charades-v2";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.png"];
 
 self.addEventListener("install", e => {
@@ -15,6 +16,12 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request))
+    fetch(e.request)
+      .then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
+        return res;
+      })
+      .catch(() => caches.match(e.request).then(hit => hit || caches.match("./index.html")))
   );
 });
