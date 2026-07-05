@@ -83,6 +83,21 @@
     font-size: clamp(14px, 4vw, 18px); font-weight: 600; opacity: .8;
   }
 
+  /* Small back button, lower left */
+  #back {
+    position: fixed;
+    left: calc(env(safe-area-inset-left) + 14px);
+    bottom: calc(env(safe-area-inset-bottom) + 14px);
+    width: 52px; height: 52px; border-radius: 50%;
+    border: none; cursor: pointer;
+    background: rgba(255,255,255,.25);
+    color: #fff; font-size: 26px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .1s, opacity .2s;
+  }
+  #back:active { transform: scale(.9); }
+  #back[hidden] { display: none; }
+
   @keyframes pop {
     0%   { transform: scale(.4) rotate(-6deg); opacity: 0; }
     60%  { transform: scale(1.08) rotate(2deg); opacity: 1; }
@@ -150,6 +165,8 @@
 
   <footer id="foot">Tap anywhere for the next one</footer>
 
+  <button id="back" hidden aria-label="Back to previous card">←</button>
+
 <script>
 // ---- The deck -------------------------------------------------------------
 const ANIMALS = [
@@ -212,16 +229,15 @@ function refill(){
   }
 }
 
-const stage = document.getElementById("stage");
-const foot  = document.getElementById("foot");
+const stage   = document.getElementById("stage");
+const foot    = document.getElementById("foot");
+const backBtn = document.getElementById("back");
 
-function nextCard(){
-  if (bag.length === 0) refill();
-  const c = bag.pop();
-  last = c;
+let history = [];   // cards shown this session, each with its background color
+let pos = -1;       // where we are in history (back moves this left)
 
-  document.body.style.backgroundColor = COLORS[Math.floor(Math.random()*COLORS.length)];
-
+function render(c){
+  document.body.style.backgroundColor = c.color;
   stage.innerHTML =
     '<div class="card animate">' +
       '<div class="emoji">' + c.emoji + '</div>' +
@@ -229,10 +245,45 @@ function nextCard(){
       '<div class="kind">' + (c.kind === "animal" ? "Animal" : "Act it out!") + '</div>' +
     '</div>';
   foot.textContent = "Tap for the next one →";
+  backBtn.hidden = pos <= 0;
 }
 
-// tap the big area to advance
-stage.addEventListener("click", nextCard);
+function nextCard(){
+  // if we went back, step forward through history before drawing new cards
+  if (pos < history.length - 1){
+    pos++;
+    render(history[pos]);
+    return;
+  }
+  if (bag.length === 0) refill();
+  const c = Object.assign({}, bag.pop());
+  c.color = COLORS[Math.floor(Math.random()*COLORS.length)];
+  last = c;
+  history.push(c);
+  pos = history.length - 1;
+  render(c);
+}
+
+function prevCard(){
+  if (pos > 0){
+    pos--;
+    render(history[pos]);
+  }
+}
+
+// tap the big area to advance — ignore rapid double-taps so one tap can't skip two cards
+let lastAdvance = 0;
+stage.addEventListener("click", () => {
+  const now = Date.now();
+  if (now - lastAdvance < 400) return;
+  lastAdvance = now;
+  nextCard();
+});
+
+backBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  prevCard();
+});
 
 // category chips
 document.querySelectorAll(".chip").forEach(chip => {
@@ -242,6 +293,7 @@ document.querySelectorAll(".chip").forEach(chip => {
     chip.classList.add("active");
     category = chip.dataset.cat;
     bag = []; last = null;
+    history = []; pos = -1;
     nextCard();
   });
 });
@@ -249,6 +301,7 @@ document.querySelectorAll(".chip").forEach(chip => {
 // keyboard: space / arrow to advance (handy when testing on a laptop)
 document.addEventListener("keydown", e => {
   if (e.code === "Space" || e.code === "ArrowRight" || e.code === "Enter") nextCard();
+  if (e.code === "ArrowLeft" || e.code === "Backspace") prevCard();
 });
 
 // register offline cache
